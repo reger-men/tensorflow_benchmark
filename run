@@ -1,0 +1,2 @@
+python3 sample01.py -workers "192.168.1.183:122,192.168.1.185:123" -type "worker" -index 0
+python3 sample01.py -workers "192.168.1.183:122,192.168.1.185:123" -type "worker" -index 1
