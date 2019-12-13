@@ -24,7 +24,7 @@ flags.DEFINE_integer('buffer_size', 50000, 'Shuffle buffer size')
 flags.DEFINE_integer('batch_size', 64, 'Batch Size')
 flags.DEFINE_string('train_mode', 'loop', 'Use either keras fit or loop training')
 flags.DEFINE_string('distribution_strategy', 'OneDevice', 'Can be: Mirrored, MultiWorker, OneDevice')
-
+flags.DEFINE_integer('num_gpus', 1, 'Number of GPUs. 0 will run on CPU')
 
 def run_main(argv):
     del argv
@@ -33,7 +33,8 @@ def run_main(argv):
             'buffer_size': FLAGS.buffer_size,
             'batch_size': FLAGS.batch_size,
             'train_mode': FLAGS.train_mode,
-            'distribution_strategy': FLAGS.distribution_strategy
+            'distribution_strategy': FLAGS.distribution_strategy,
+            'num_gpus': FLAGS.num_gpus
             }
     main(**kwargs)
 
@@ -46,9 +47,12 @@ def scale(image, label):
 
 
 
-def main(epochs, buffer_size, batch_size, train_mode='loop', distribution_strategy='OneDevice'):
+def main(epochs, buffer_size, batch_size, train_mode, distribution_strategy, num_gpus):
     #strategy = tf.distribute.MirroredStrategy(cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
-    strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+    #strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+
+
+    strategy = get_distribution_strategy(strategy=distribution_strategy, num_gpus=num_gpus)
     print_msg ('Number of devices: {}'.format(strategy.num_replicas_in_sync), 'info')
    
     data_obj = Dataset(batch_size=128)
