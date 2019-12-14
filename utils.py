@@ -90,6 +90,6 @@ def setup_cluster(workers):
         status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && pip3 install --user -r requirements.txt")
         checkStatus(status, ret)
 
-        status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && python3 train.py --train_mode='fit' --workers='192.168.1.183:122,192.168.1.185:123' --w_type='worker' --w_index=1 --distribution_strategy='MultiWorker'")
+        status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && sudo python3 train.py --train_mode='fit' --workers='192.168.1.183:122,192.168.1.185:123' --w_type='worker' --w_index=1 --distribution_strategy='MultiWorker'  > /dev/null 2>&1 &", inBackground=True)
         checkStatus(status, ret)
 

@@ -11,7 +11,6 @@ class Config(object):
         self.user = user
         self.pwd = pwd
 
-
 class Worker(object):
     """Worker Object to connect and execute commands from the  'chief' worker"""
     
@@ -34,26 +33,35 @@ class Worker(object):
                                port=self.port,
                                username=self.user,
                                password=self.pwd)
+
             except AuthenticationException:
                 print("Authentication failed!")
             except NoValidConnectionsError:
                 print("Connection failed!")    
             finally:
-                print(type(client))
                 client.exec_command("hostnamectl")
                 return client
         return self.client
 
-    def exec_cmd(self, cmd):
+    def exec_cmd(self, cmd, inBackground=False, timeout=None):
         """Execute command and return status and output"""
         """ status 0 means no error"""
+        status=0
+        stdout='Process run in background'
 
         self.client = self.connect()
-        stdin, stdout, stderr = self.client.exec_command(cmd)
-        status = stdout.channel.recv_exit_status()
-        if status != 0:
-            stdout = stderr
-        return status, stdout.readlines()
+        if inBackground:
+            transport = self.client.get_transport()
+            channel = transport.open_session()
+            channel.setblocking(0)
+            channel.exec_command(cmd)
+
+        else:
+            stdin, stdout, stderr = self.client.exec_command(cmd)
+            status = stdout.channel.recv_exit_status()
+            if status != 0:
+                stdout = stderr
+        return status, stdout
 
     def disconnect(self):
         self.client.close()
