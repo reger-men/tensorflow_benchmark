@@ -4,8 +4,8 @@ import tensorflow as tf
 from models import resnet_cifar_model
 
 class Benchmark(object):
-    def __init__(self, epochs, steps_per_epoch, model):
-        self.model = self.create_model(model)
+    def __init__(self, epochs, steps_per_epoch, model='resnet56'):
+        self.model = None
         self.epochs = epochs
         self.steps_per_epoch = steps_per_epoch
         self.loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -18,8 +18,6 @@ class Benchmark(object):
         self.callbacks = [tf.keras.callbacks.LearningRateScheduler(self.decay)]
 
     def create_model(self, model_name):
-        # del model object
-        #del self.model
         if model_name == 'resnet56':
             self.model = resnet_cifar_model.resnet56(classes=10)
         else:
@@ -64,6 +62,9 @@ class Benchmark(object):
             return self.fit_train(train_dataset.repeat(), test_dataset.repeat())
 
     def loop_train(self, train_dataset, test_dataset):
+        header_str = ('Step\tImg/sec\ttotal_loss\taccuracy')
+        print_msg(header_str, 'info')
+        
         for epoch in range(self.epochs):
             for image, label in train_dataset:
                 self.train_step(image, label)
@@ -75,6 +76,7 @@ class Benchmark(object):
                                       self.train_accuracy.result(),
                                       self.test_loss.result(),
                                       self.test_accuracy.result()), 'info', True)
+            print_msg('')
 
     def compile_model(self):
         self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])

@@ -1,6 +1,6 @@
-import sys
+import sys, os, json
 import tensorflow as tf
-
+from worker import *
 
 def print_msg(msg, typ=None, onLine=False):
     """Print msg in specific format by it type"""
@@ -25,7 +25,7 @@ def print_msg(msg, typ=None, onLine=False):
     print(msg, end=end_)
 
 
-def get_distribution_strategy(strategy="OneDevice", num_gpus=0):
+def get_distribution_strategy(strategy="OneDevice", num_gpus=0, workers=None, typ=None, index=None):
     if num_gpus == 0:
         devices = ["device:CPU:0"]
     elif strategy == "OneDevice" and num_gpus > 1:
@@ -42,5 +42,52 @@ def get_distribution_strategy(strategy="OneDevice", num_gpus=0):
         return tf.distribute.MirroredStrategy(devices=devices, cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
 
     elif strategy == "MultiWorker":
+        if index == 0: setup_cluster(workers)
+        
+        os.environ['TF_CONFIG'] = json.dumps({
+            'cluster': {
+                'worker': workers.split(','),
+            },
+            'task': {
+                'type': typ, 
+                'index': index
+            }
+        })
         return tf.distribute.experimental.MultiWorkerMirroredStrategy()
+
+def checkStatus(status, ret):
+    if status != 0:
+        for line in ret:
+            print_msg(line, 'err')
+        sys.exit('Error!')        
+
+def setup_cluster(workers):
+    print("############################################....Set up cluster...##########################################################")
+    
+    #remove the first element 'chief worker'
+    hosts = workers.split(',')[1:]
+
+    for host in hosts:
+        print(host)
+        host = host.split(':')
+        host = host[0]
+        port = host[1]
+
+        user = input(f"Please enter Username for host {host}: ")
+        pwd = input(f"Please enter Password for host {host}: ")
+        
+        config = Config(host, user, pwd, port=22)
+        worker = Worker(config)
+        worker.connect()
+
+        #Clone repo in worker
+        status, ret = worker.exec_cmd("git clone https://github.com/reger-men/tensorflow_benchmark.git ~/work/tensorflow_benchmark")
+        checkStatus(status, ret)
+
+        #start training on worker
+        status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark")
+        checkStatus(status, ret)
+
+        status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && python3 train.py --train_mode='fit' --workers='192.168.1.183:122,192.168.1.185:123' --w_type='worker' --w_index=1 --distribution_strategy='MultiWorker'")
+        checkStatus(status, ret)
 

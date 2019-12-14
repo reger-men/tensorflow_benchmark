@@ -43,5 +43,5 @@ class Dataset(object):
         return self.train_dataset, self.test_dataset
 
     def get_buffer_size(self):
-        return int(self.buffer_size)
+        return self.buffer_size
 
