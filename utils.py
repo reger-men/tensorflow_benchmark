@@ -1,6 +1,8 @@
 import sys, os, json
 import tensorflow as tf
 from worker import *
+from getpass import getpass
+
 
 def print_msg(msg, typ=None, onLine=False):
     """Print msg in specific format by it type"""
@@ -55,11 +57,11 @@ def get_distribution_strategy(strategy="OneDevice", num_gpus=0, workers=None, ty
         })
         return tf.distribute.experimental.MultiWorkerMirroredStrategy()
 
-def checkStatus(status, ret):
+def checkStatus(status, ret, exit=True):
     if status != 0:
         for line in ret:
             print_msg(line, 'err')
-        sys.exit('Error!')        
+        if exit: sys.exit('Error!')
 
 def setup_cluster(workers):
     print("############################################....Set up cluster...##########################################################")
@@ -74,7 +76,7 @@ def setup_cluster(workers):
         port = host[1]
 
         user = input(f"Please enter Username for host {host}: ")
-        pwd = input(f"Please enter Password for host {host}: ")
+        pwd = getpass(f"Please enter Password for host {host}: ")
         
         config = Config(host, user, pwd, port=22)
         worker = Worker(config)
@@ -82,7 +84,7 @@ def setup_cluster(workers):
 
         #Clone repo in worker
         status, ret = worker.exec_cmd("git clone https://github.com/reger-men/tensorflow_benchmark.git ~/work/tensorflow_benchmark")
-        checkStatus(status, ret)
+        checkStatus(status, ret, exit=False)
 
         #start training on worker
         status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark")
