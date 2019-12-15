@@ -62,9 +62,13 @@ class Benchmark(object):
             return self.fit_train(train_dataset.repeat(), test_dataset.repeat())
 
     def loop_train(self, train_dataset, test_dataset):
+        print_msg("Warming Up...", 'info')
+        for image, label in train_dataset.take(1):
+            self.train_step(image, label)
+
         header_str = ('Step\tImg/sec\ttotal_loss\taccuracy')
         print_msg(header_str, 'info')
-        
+
         for epoch in range(self.epochs):
             for image, label in train_dataset:
                 self.train_step(image, label)

@@ -5,7 +5,7 @@ from absl import flags
 from utils import *
 
 import tensorflow as tf
-print_msg(tf.__version__, 'info')
+print_msg(f'Tensorflow version: {tf.__version__}', 'info')
 
 # Filter out INFO & WARNING messages
 tf.get_logger().setLevel('WARNING')
