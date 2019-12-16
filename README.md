@@ -22,7 +22,11 @@ Mirrored strategy will be used as defalt with ```num_gpus>1```
 
 ```python3 train.py -train_mode fit -num_gpus 2```
 
+Loop still under development.
+
 ##### Multi-Node Multi-GPUs
 Experimental: launch Multi-Nodes training from the chief Worker Node
 
 ```python3 train.py --train_mode=fit --workers="localhost:122,localhost:123" --w_type="worker" --w_index=0 --distribution_strategy=MultiWorker```
+
+Loop still under development.
