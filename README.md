@@ -11,14 +11,14 @@ TensorFlow benchmark scripts for single and multi Nodes with Multi GPUs
 ##### Single Node Single GPU
 Train with custom loop:
 
-```python3 train.py -train-mode loop```
+```python3 train.py -train_mode loop```
 
 Train with Keras fit:
 
-```python3 train.py -train-mode fit```
+```python3 train.py -train_mode fit```
 
 ##### Single Node Multi-GPUs
-Mirrored strategy will be used as defalt with ```num_gpus>1```
+Mirrored strategy will be used as default with ```num_gpus>1```
 
 ```python3 train.py -train_mode fit -num_gpus 2```
 
