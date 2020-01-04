@@ -10,8 +10,10 @@ def print_msg(msg, typ=None, onLine=False):
     end_ = '\n'
     TXTEND = '\033[0m'
     TXTBOLD = '\033[1m'
-    if typ == 'info':
-        msg = TXTBOLD + '\033[95m' + msg + TXTEND
+    if typ == 'step':
+        msg = TXTBOLD + '\033[36m' + msg + TXTEND
+    elif typ == 'info':
+        msg = '\033[36m' + msg + TXTEND
     elif typ == 'succ':
         msg = TXTBOLD + '\033[92m' + msg + TXTEND
     elif typ == 'warn':
