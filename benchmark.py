@@ -18,9 +18,10 @@ def get_perf_timing(batch_size, step_train_times, scale=1):
 
 class Callbacks(tf.keras.callbacks.Callback):
 
-    def __init__(self, batch_size, display_every=20):
+    def __init__(self, batch_size, display_every=20, num_gpu=1):
         self.batch_size = batch_size
         self.display_every = display_every
+        self.num_gpu = num_gpu
         self.start_time = 0
         self.train_time = 0
         self.step_train_times = []
@@ -36,7 +37,7 @@ class Callbacks(tf.keras.callbacks.Callback):
             self.step_train_times.append(self.train_time)
             
             if ((batch % self.display_every) == 0):
-                speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, self.step_train_times)
+                speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, self.step_train_times, self.num_gpu)
                 self.speeds.append(speed_mean)
 
                 log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=logs['loss'], f3=logs['accuracy'])
@@ -51,12 +52,13 @@ class Callbacks(tf.keras.callbacks.Callback):
 
 
 class Benchmark(object):
-    def __init__(self, epochs, steps_per_epoch, batch_size=128, display_every=20, model='resnet56'):
+    def __init__(self, epochs, steps_per_epoch, batch_size=128, display_every=20, num_gpu=1, model='resnet56'):
         self.model = None
         self.epochs = epochs
         self.steps_per_epoch = steps_per_epoch
         self.batch_size = batch_size
         self.display_every = display_every
+        self.num_gpu = num_gpu
         self.loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1,momentum=0.9, nesterov=True)
 
@@ -64,7 +66,7 @@ class Benchmark(object):
         self.test_loss = tf.keras.metrics.Mean(name='test_loss')
         self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
         self.test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
-        self.callbacks = [Callbacks(self.batch_size, self.display_every), tf.keras.callbacks.LearningRateScheduler(self.decay)]
+        self.callbacks = [Callbacks(self.batch_size, self.display_every, self.num_gpu), tf.keras.callbacks.LearningRateScheduler(self.decay)]
 
     def create_model(self, model_name):
         if model_name == 'resnet56':
@@ -137,7 +139,7 @@ class Benchmark(object):
                     train_time = time.time() - start_time
                     step_train_times.append(train_time)
 
-                    speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, step_train_times)
+                    speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, step_train_times, self.num_gpu)
                     speeds.append(speed_mean)
 
                     log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=self.train_loss.result(), f3=self.train_accuracy.result())
@@ -154,7 +156,7 @@ class Benchmark(object):
 
     def fit_train(self, train_dataset, test_dataset):
         print_msg("Warming Up...", 'info')
-        self.model.fit(train_dataset.take(2), epochs=1, steps_per_epoch=2, verbose=0, callbacks=self.callbacks)
+        self.model.fit(train_dataset.take(self.num_gpu), epochs=1, steps_per_epoch=1, verbose=0, callbacks=self.callbacks)
 
         header_str = "{s0:s}\t{s1:s}\t\t{s2:s}\t{s3:s}".format(s0='Step', s1='Img/sec', s2='total_loss', s3='accuracy')
         print_msg(header_str, 'step')
