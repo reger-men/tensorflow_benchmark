@@ -1,4 +1,6 @@
 # Tensorflow v2 benchmark
+![Supports TFv2.x](https://img.shields.io/badge/Supports-tensorflow%20v2.0-blue.svg)
+
 TensorFlow benchmark scripts for single and multi Nodes with Multi GPUs
 
 #### Usage
