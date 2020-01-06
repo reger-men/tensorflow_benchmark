@@ -22,7 +22,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('epochs', 1, 'Number of epochs')
 flags.DEFINE_integer('buffer_size', 50000, 'Shuffle buffer size')
 flags.DEFINE_integer('batch_size', 128, 'Batch Size')
-flags.DEFINE_string('train_mode', 'loop', 'Use either keras fit or loop training')
+flags.DEFINE_string('train_mode', 'fit', 'Use either keras fit or loop training')
 flags.DEFINE_integer('display_every', 20, 'Number of steps after which progress is printed out')
 flags.DEFINE_string('distribution_strategy', 'OneDevice', 'Can be: Mirrored, MultiWorker, OneDevice')
 flags.DEFINE_integer('num_gpus', 1, 'Number of GPUs. 0 will run on CPU')
