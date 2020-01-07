@@ -1,5 +1,5 @@
 # Tensorflow v2 benchmark
-![Supports TFv2.x](https://img.shields.io/badge/Supports-tensorflow%20v2.x-blue.svg)
+![Supports TFv2](https://img.shields.io/badge/Supports-tensorflow%20v2-blue.svg)
 
 TensorFlow benchmark scripts for single and multi Nodes with Multi GPUs
 
