@@ -65,7 +65,8 @@ class Benchmark(object):
             self.loss_fit = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
             self.loss_loop = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
             self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1,momentum=0.9, nesterov=True)
-        
+            checkpoint = tf.train.Checkpoint(optimizer=self.optimizer, model=self.model)
+
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.test_loss = tf.keras.metrics.Mean(name='test_loss')
         self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
