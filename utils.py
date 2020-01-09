@@ -29,7 +29,7 @@ def print_msg(msg, typ=None, onLine=False):
     print(msg, end=end_)
 
 
-def get_distribution_strategy(strategy="OneDevice", num_gpus=0, workers=None, typ=None, index=None):
+def get_distribution_strategy(strategy="OneDevice", train_mode="fit", num_gpus=0, workers=None, typ=None, index=None, setup=True):
     if num_gpus == 0:
         devices = ["device:CPU:0"]
     elif strategy == "OneDevice" and num_gpus > 1:
@@ -46,7 +46,7 @@ def get_distribution_strategy(strategy="OneDevice", num_gpus=0, workers=None, ty
         return tf.distribute.MirroredStrategy(devices=devices, cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
 
     elif strategy == "MultiWorker":
-        if index == 0: setup_cluster(workers)
+        if (setup and index == 0): setup_cluster(train_mode, workers)
         
         os.environ['TF_CONFIG'] = json.dumps({
             'cluster': {
@@ -65,17 +65,19 @@ def checkStatus(status, ret, exit=True):
             print_msg(line, 'err')
         if exit: sys.exit('Error!')
 
-def setup_cluster(workers):
+def setup_cluster(train_mode, workers):
     print_msg("############################################....Set up cluster...##########################################################", 'step')
-
+    
     #remove the first element 'chief worker'
     hosts = workers.split(',')[1:]
 
+    index_id = 0
     for host in hosts:
         print(host)
         host = host.split(':')
         host = host[0]
         port = host[1]
+        index_id += 1
 
         user = input(f"Please enter Username for host {host}: ")
         pwd = getpass(f"Please enter Password for host {host}: ")
@@ -96,5 +98,6 @@ def setup_cluster(workers):
 
         #start training on worker
         print_msg("3. Start training on the worker", 'info')
-        status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && sudo python3 train.py --train_mode='fit' --workers='192.168.1.183:122,192.168.1.185:123' --w_type='worker' --w_index=1 --distribution_strategy='MultiWorker'  > /dev/null 2>&1 &", inBackground=True)
+        cmd = 'cd ~/work/tensorflow_benchmark && sudo python3 train.py --train_mode="{}" --workers="{}" --w_type="worker" --w_index={} --distribution_strategy="MultiWorker"  > /dev/null 2>&1 &'.format(train_mode, workers, index_id)
+        status, ret = worker.exec_cmd(cmd, inBackground=True)
         checkStatus(status, ret)
