@@ -33,7 +33,7 @@ Experimental: launch Multi-Nodes training from the chief Worker Node
 
 Loop still under development.
 
-##### Flags
+##### Help Flags
 ```python3 train.py --helpfull```
 
 ```
