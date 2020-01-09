@@ -66,8 +66,8 @@ def checkStatus(status, ret, exit=True):
         if exit: sys.exit('Error!')
 
 def setup_cluster(workers):
-    print("############################################....Set up cluster...##########################################################")
-    
+    print_msg("############################################....Set up cluster...##########################################################", 'step')
+
     #remove the first element 'chief worker'
     hosts = workers.split(',')[1:]
 
@@ -79,19 +79,22 @@ def setup_cluster(workers):
 
         user = input(f"Please enter Username for host {host}: ")
         pwd = getpass(f"Please enter Password for host {host}: ")
-        
+
         config = Config(host, user, pwd, port=22)
         worker = Worker(config)
         worker.connect()
 
         #Clone repo in worker
+        print_msg("1. Clone benchmark repository", 'info')
         status, ret = worker.exec_cmd("git clone https://github.com/reger-men/tensorflow_benchmark.git ~/work/tensorflow_benchmark")
         checkStatus(status, ret, exit=False)
 
-        #start training on worker
+        #install dependencies on worker
+        print_msg("2. Install dependencies", 'info')
         status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && pip3 install --user -r requirements.txt")
-        checkStatus(status, ret)
+        #checkStatus(status, ret)
 
+        #start training on worker
+        print_msg("3. Start training on the worker", 'info')
         status, ret = worker.exec_cmd("cd ~/work/tensorflow_benchmark && sudo python3 train.py --train_mode='fit' --workers='192.168.1.183:122,192.168.1.185:123' --w_type='worker' --w_index=1 --distribution_strategy='MultiWorker'  > /dev/null 2>&1 &", inBackground=True)
         checkStatus(status, ret)
-

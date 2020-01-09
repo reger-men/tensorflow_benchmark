@@ -40,7 +40,7 @@ class Callbacks(tf.keras.callbacks.Callback):
                 speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, self.step_train_times, self.num_gpu)
                 self.speeds.append(speed_mean)
 
-                log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=logs['loss'], f3=logs['accuracy'])
+                log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=logs['loss'], f3=logs['accuracy']*100)
                 print_msg(log_str, 'info')
 
     def on_train_end(self, logs=None):
@@ -52,16 +52,20 @@ class Callbacks(tf.keras.callbacks.Callback):
 
 
 class Benchmark(object):
-    def __init__(self, epochs, steps_per_epoch, batch_size=128, display_every=20, num_gpu=1, model='resnet56'):
-        self.model = None
+    def __init__(self, epochs, steps_per_epoch, batch_size=128, display_every=20, num_gpu=1, model='resnet56', strategy=None):
         self.epochs = epochs
         self.steps_per_epoch = steps_per_epoch
         self.batch_size = batch_size
         self.display_every = display_every
         self.num_gpu = num_gpu
-        self.loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1,momentum=0.9, nesterov=True)
+        self.strategy = strategy
 
+        with self.strategy.scope():
+            self.model = self.create_model(model_name=model)
+            self.loss_fit = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+            self.loss_loop = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
+            self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.1,momentum=0.9, nesterov=True)
+        
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.test_loss = tf.keras.metrics.Mean(name='test_loss')
         self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
@@ -77,6 +81,9 @@ class Benchmark(object):
             sys.exit('Error!')
         return self.model
 
+    def compile_model(self):
+        self.model.compile(optimizer=self.optimizer, loss=self.loss_fit, metrics=['accuracy'])
+
     def decay(self, epoch):
       if epoch < 3:
         return 1e-3
@@ -88,7 +95,7 @@ class Benchmark(object):
     def train_step(self, image, label):
         with tf.GradientTape() as tape:
             predictions = self.model(image, training=True)
-            loss = self.loss(label, predictions)
+            loss = self.loss_loop(label, predictions)
             loss += sum(self.model.losses)
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(
@@ -101,7 +108,7 @@ class Benchmark(object):
         images, labels = inputs
 
         predictions = self.model(images, training=False)
-        t_loss = self.loss(labels, predictions)
+        t_loss = self.loss_loop(labels, predictions)
 
         test_loss.update_state(t_loss)
         test_accuracy.update_state(labels, predictions)
@@ -151,10 +158,11 @@ class Benchmark(object):
         print_msg(log_str, 'step')
 
 
-    def compile_model(self):
-        self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])
-
     def fit_train(self, train_dataset, test_dataset):
+        # Compile the model in the context of strategy.scope
+        with self.strategy.scope():
+            self.compile_model()
+
         print_msg("Warming Up...", 'info')
         self.model.fit(train_dataset.take(self.num_gpu), epochs=1, steps_per_epoch=1, verbose=0, callbacks=self.callbacks)
 

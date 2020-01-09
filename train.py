@@ -58,13 +58,13 @@ def main(epochs, buffer_size, batch_size, train_mode, display_every,
     data_obj = Dataset(batch_size)
     train_dataset, test_dataset = data_obj.create_dataset()
     steps_per_epoch = data_obj.get_buffer_size()//(batch_size)
-    train_obj = Benchmark(epochs, steps_per_epoch, batch_size, display_every, num_gpus, 'resnet56')
+    train_obj = Benchmark(epochs, steps_per_epoch, batch_size, display_every, num_gpus, 'resnet56', strategy)
 
-    with strategy.scope():
+    '''with strategy.scope():
         # Create and compile model within strategy scope
         train_obj.create_model('resnet56')
         train_obj.compile_model()
-        
+    '''            
     print_msg('Training...', 'info')
     train_obj.run(train_dataset, test_dataset, train_mode)
     print_msg('Training Done.', 'succ')
