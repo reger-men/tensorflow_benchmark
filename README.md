@@ -31,7 +31,9 @@ Experimental: launch Multi-Nodes training from the chief Worker Node
 
 ```python3 train.py --train_mode=fit --workers="localhost:122,localhost:123" --w_type="worker" --w_index=0 --distribution_strategy=MultiWorker```
 
-Loop still under development.
+Or with custom loop:
+
+```python3 train.py --train_mode=loop --workers="localhost:122,localhost:123" --w_type="worker" --w_index=0 --distribution_strategy=MultiWorker```
 
 ##### Help Flags
 ```python3 train.py --helpfull```
