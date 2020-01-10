@@ -10,6 +10,7 @@ def print_msg(msg, typ=None, onLine=False):
     end_ = '\n'
     TXTEND = '\033[0m'
     TXTBOLD = '\033[1m'
+    TXTCLEAR = '\033[0K'
     if typ == 'step':
         msg = TXTBOLD + '\033[36m' + msg + TXTEND
     elif typ == 'info':
@@ -26,7 +27,7 @@ def print_msg(msg, typ=None, onLine=False):
     if onLine:
         end_ = '\r'
 
-    print(msg, end=end_)
+    print(TXTCLEAR + msg, end=end_)
 
 
 def get_distribution_strategy(strategy="OneDevice", train_mode="fit", num_gpus=0, workers=None, typ=None, index=None, setup=True):
