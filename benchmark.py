@@ -144,7 +144,7 @@ class Benchmark(object):
             for x in train_dataset.take(self.num_gpu):
                 self.distributed_train_step(x)
 
-            header_str = "{s0:s}\t{s1:s}\t\t{s2:s}\t{s3:s}".format(s0='Step', s1='Img/sec', s2='total_loss', s3='accuracy')
+            header_str = "{s0:s}\t{s1:s}\t\t{s2:s}\t{s3:s}".format(s0='Step', s1='Img/sec', s2='total_loss', s3='accuracy(%)')
             print_msg(header_str, 'step')
         
             batch=0
@@ -169,7 +169,7 @@ class Benchmark(object):
                         speed_mean, speed_uncertainty, speed_jitter = get_perf_timing(self.batch_size, step_train_times, self.num_gpu)
                         speeds.append(speed_mean)
 
-                        log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=self.train_loss.result(), f3=self.train_accuracy.result())
+                        log_str = "{d0:d}\t{f1:0.1f}\t\t{f2:0.4f}\t\t{f3:0.4f}".format(d0=batch, f1=speed_mean, f2=self.train_loss.result(), f3=self.train_accuracy.result()*100)
                         print_msg(log_str, 'info')
             
             speeds = np.array(speeds)
@@ -186,7 +186,7 @@ class Benchmark(object):
         print_msg("Warming Up...", 'info')
         self.model.fit(train_dataset.take(self.num_gpu), epochs=1, steps_per_epoch=1, verbose=0)
 
-        header_str = "{s0:s}\t{s1:s}\t\t{s2:s}\t{s3:s}".format(s0='Step', s1='Img/sec', s2='total_loss', s3='accuracy')
+        header_str = "{s0:s}\t{s1:s}\t\t{s2:s}\t{s3:s}".format(s0='Step', s1='Img/sec', s2='total_loss', s3='accuracy(%)')
         print_msg(header_str, 'step')
 
         history = self.model.fit(train_dataset, epochs=self.epochs, steps_per_epoch=self.steps_per_epoch, verbose=0, callbacks=self.callbacks)
